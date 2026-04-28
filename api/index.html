@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Synopsis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5;
+           min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .wrap { width: 100%; max-width: 560px; padding: 16px; }
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+    .card { background: white; border-radius: 14px; padding: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.07); margin-bottom: 16px; }
+    label { font-size: 14px; font-weight: 500; display: block; margin-bottom: 6px; color: #333; }
+    input[type=text], input[type=password], textarea {
+      width: 100%; padding: 11px 13px; border: 1px solid #e0e0e0;
+      border-radius: 10px; font-size: 15px; background: #fafafa;
+      margin-bottom: 14px; outline: none; transition: border .2s; }
+    input:focus, textarea:focus { border-color: #4f46e5; background: white; }
+    textarea { min-height: 140px; resize: vertical; }
+    button.main { width: 100%; padding: 14px; background: #4f46e5; color: white;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: background .2s; }
+    button.main:hover { background: #4338ca; }
+    button.main:disabled { background: #a5a5a5; cursor: not-allowed; }
+    .erreur { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px;
+              padding: 12px; color: #b91c1c; font-size: 14px; display: none; margin-bottom: 14px; }
+    .spinner { text-align: center; color: #666; padding: 16px; font-size: 14px; display: none; }
+    .resultat { display: none; }
+    .res-titre { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: #333; }
+    .res-texte { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px;
+                 padding: 14px; font-size: 14px; line-height: 1.75;
+                 white-space: pre-wrap; margin-bottom: 12px; color: #222; }
+    details { margin-bottom: 14px; }
+    summary { font-size: 13px; color: #666; cursor: pointer; padding: 6px 0; }
+    .analyse-box { background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 10px;
+                   padding: 12px; font-size: 13px; color: #1e40af; line-height: 1.6; margin-top: 6px; }
+    .btn-copy { width: 100%; padding: 11px; background: #f0fdf4; color: #166534;
+      border: 1px solid #86efac; border-radius: 10px; font-size: 14px;
+      font-weight: 500; cursor: pointer; }
+    .btn-copy:hover { background: #dcfce7; }
+    .lock { text-align: center; font-size: 32px; margin-bottom: 8px; }
+    #login { display: block; }
+    #app { display: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Écran de connexion -->
+  <div id="login">
+    <div class="card" style="max-width:340px;margin:auto">
+      <div class="lock">🔒</div>
+      <h1 style="text-align:center;margin-bottom:4px">Agent Synopsis</h1>
+      <p class="sub" style="text-align:center;margin-bottom:20px">Accès privé</p>
+      <div id="login-err" class="erreur"></div>
+      <label>Mot de passe</label>
+      <input type="password" id="pwd" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') seConnecter()">
+      <button class="main" onclick="seConnecter()">Entrer</button>
+    </div>
+  </div>
+
+  <!-- Application principale -->
+  <div id="app">
+    <h1>✍️ Agent Synopsis</h1>
+    <p class="sub">Transformation de thème — accès privé</p>
+
+    <div class="card">
+      <label>Ton synopsis</label>
+      <textarea id="synopsis" placeholder="Colle ton synopsis ici..."></textarea>
+      <label>Thème cible</label>
+      <input type="text" id="theme" placeholder="Ex : féerique, western, cyberpunk...">
+      <div id="erreur" class="erreur"></div>
+      <div id="spinner" class="spinner">⏳ Traitement en cours…</div>
+      <button class="main" id="btn" onclick="lancer()">🚀 Transformer</button>
+    </div>
+
+    <div class="resultat card" id="resultat">
+      <details>
+        <summary>📋 Voir l'analyse extraite</summary>
+        <div class="analyse-box" id="analyse"></div>
+      </details>
+      <p class="res-titre">Synopsis transformé</p>
+      <div class="res-texte" id="res-texte"></div>
+      <button class="btn-copy" onclick="copier()">📋 Copier le résultat</button>
+    </div>
+  </div>
+
+</div>
+<script>
+  let motDePasse = "";
+
+  function seConnecter() {
+    const v = document.getElementById("pwd").value.trim();
+    if (!v) return;
+    motDePasse = v;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display   = "block";
+  }
+
+  async function lancer() {
+    const synopsis = document.getElementById("synopsis").value.trim();
+    const theme    = document.getElementById("theme").value.trim();
+    const btn      = document.getElementById("btn");
+    document.getElementById("erreur").style.display   = "none";
+    document.getElementById("resultat").style.display = "none";
+    if (!synopsis) { affErr("Merci de coller un synopsis."); return; }
+    if (!theme)    { affErr("Merci d'indiquer un thème cible."); return; }
+    btn.disabled = true;
+    document.getElementById("spinner").style.display = "block";
+    try {
+      const rep = await fetch("/api/transform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ synopsis, theme, password: motDePasse })
+      });
+      const data = await rep.json();
+      if (!data.ok) { affErr(data.erreur); return; }
+      const a = data.analyse;
+      document.getElementById("analyse").innerHTML =
+        `<b>Énigmes :</b> ${(a.enigmes||[]).join(", ")}<br><br>` +
+        `<b>Style :</b> ${a.style||""}<br><br>` +
+        `<b>Éléments immuables :</b> ${(a.elements_immuables||[]).join(", ")}`;
+      document.getElementById("res-texte").textContent   = data.resultat;
+      document.getElementById("resultat").style.display  = "block";
+    } catch(e) {
+      affErr("Erreur réseau. Réessaie dans quelques secondes.");
+    } finally {
+      btn.disabled = false;
+      document.getElementById("spinner").style.display = "none";
+    }
+  }
+
+  function affErr(msg) {
+    const el = document.getElementById("erreur");
+    el.textContent = msg; el.style.display = "block";
+    document.getElementById("spinner").style.display = "none";
+    document.getElementById("btn").disabled = false;
+  }
+
+  function copier() {
+    navigator.clipboard.writeText(document.getElementById("res-texte").textContent).then(() => {
+      const b = document.querySelector(".btn-copy");
+      b.textContent = "✅ Copié !";
+      setTimeout(() => b.textContent = "📋 Copier le résultat", 2000);
+    });
+  }
+</script>
+</body>
+</html>

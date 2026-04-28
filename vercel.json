@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/transform.py": {
+      "runtime": "vercel-python@3.0.0"
+    }
+  }
+}
