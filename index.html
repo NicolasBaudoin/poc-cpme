@@ -4,86 +4,369 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agent Synopsis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #18181c;
+      --surface2: #222228;
+      --border: #2e2e38;
+      --accent: #c8a96e;
+      --accent2: #e8c98e;
+      --text: #f0ede8;
+      --muted: #7a7870;
+      --error: #e07070;
+      --success: #70c070;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: #f5f5f5;
-           min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .wrap { width: 100%; max-width: 560px; padding: 16px; }
-    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-    .sub { font-size: 13px; color: #888; margin-bottom: 20px; }
-    .card { background: white; border-radius: 14px; padding: 20px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.07); margin-bottom: 16px; }
-    label { font-size: 14px; font-weight: 500; display: block; margin-bottom: 6px; color: #333; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 580px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── LOGIN ─── */
+    #login {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .login-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 400;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .login-title em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
     input[type=text], input[type=password], textarea {
-      width: 100%; padding: 11px 13px; border: 1px solid #e0e0e0;
-      border-radius: 10px; font-size: 15px; background: #fafafa;
-      margin-bottom: 14px; outline: none; transition: border .2s; }
-    input:focus, textarea:focus { border-color: #4f46e5; background: white; }
-    textarea { min-height: 140px; resize: vertical; }
-    button.main { width: 100%; padding: 14px; background: #4f46e5; color: white;
-      border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
-      cursor: pointer; transition: background .2s; }
-    button.main:hover { background: #4338ca; }
-    button.main:disabled { background: #a5a5a5; cursor: not-allowed; }
-    .erreur { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px;
-              padding: 12px; color: #b91c1c; font-size: 14px; display: none; margin-bottom: 14px; }
-    .spinner { text-align: center; color: #666; padding: 16px; font-size: 14px; display: none; }
-    .resultat { display: none; }
-    .res-titre { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: #333; }
-    .res-texte { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px;
-                 padding: 14px; font-size: 14px; line-height: 1.75;
-                 white-space: pre-wrap; margin-bottom: 12px; color: #222; }
-    details { margin-bottom: 14px; }
-    summary { font-size: 13px; color: #666; cursor: pointer; padding: 6px 0; }
-    .analyse-box { background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 10px;
-                   padding: 12px; font-size: 13px; color: #1e40af; line-height: 1.6; margin-top: 6px; }
-    .btn-copy { width: 100%; padding: 11px; background: #f0fdf4; color: #166534;
-      border: 1px solid #86efac; border-radius: 10px; font-size: 14px;
-      font-weight: 500; cursor: pointer; }
-    .btn-copy:hover { background: #dcfce7; }
-    .lock { text-align: center; font-size: 32px; margin-bottom: 8px; }
-    #login { display: block; }
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 18px;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .btn-main {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #0e0e10;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-main:hover { background: var(--accent2); }
+    .btn-main:active { transform: scale(0.99); }
+    .btn-main:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    /* ─── APP ─── */
     #app { display: none; }
+
+    .app-header {
+      margin-bottom: 24px;
+    }
+
+    .app-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.3px;
+    }
+
+    .app-title em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .app-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ─── PROGRESS ─── */
+    .progress {
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    .progress-steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .step {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .step.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(200, 169, 110, 0.08);
+    }
+
+    .step.done {
+      border-color: var(--success);
+      color: var(--success);
+      background: rgba(112, 192, 112, 0.06);
+    }
+
+    /* ─── ERREUR ─── */
+    .erreur {
+      display: none;
+      background: rgba(224, 112, 112, 0.1);
+      border: 1px solid rgba(224, 112, 112, 0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--error);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    /* ─── RÉSULTAT ─── */
+    #resultat { display: none; margin-top: 16px; }
+
+    .res-section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    details {
+      margin-bottom: 16px;
+    }
+
+    summary {
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px 0;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    summary::before {
+      content: '▶';
+      font-size: 9px;
+      transition: transform 0.2s;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .analyse-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #a8b8c8;
+      line-height: 1.7;
+      margin-top: 6px;
+    }
+
+    .res-texte {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 15px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      color: var(--text);
+      margin-bottom: 14px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+    }
+
+    .btn-copy {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: rgba(200, 169, 110, 0.08);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ─── CLEF API ─── */
+    .api-notice {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .api-notice a {
+      color: var(--accent);
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- Écran de connexion -->
+  <!-- LOGIN -->
   <div id="login">
-    <div class="card" style="max-width:340px;margin:auto">
-      <div class="lock">🔒</div>
-      <h1 style="text-align:center;margin-bottom:4px">Agent Synopsis</h1>
-      <p class="sub" style="text-align:center;margin-bottom:20px">Accès privé</p>
-      <div id="login-err" class="erreur"></div>
+    <div>
+      <p class="login-title">Agent <em>Synopsis</em></p>
+      <p class="login-sub" style="margin-top:8px">Accès privé</p>
+    </div>
+    <div class="card" style="max-width:360px">
+      <label>Clé OpenAI</label>
+      <input type="password" id="api-key" placeholder="sk-...">
       <label>Mot de passe</label>
       <input type="password" id="pwd" placeholder="••••••••"
              onkeydown="if(event.key==='Enter') seConnecter()">
-      <button class="main" onclick="seConnecter()">Entrer</button>
+      <div id="login-err" class="erreur"></div>
+      <button class="btn-main" onclick="seConnecter()">Entrer →</button>
+      <p class="api-notice">Ta clé OpenAI n'est jamais envoyée à un serveur tiers.<br>
+        Elle reste dans ton navigateur. <a href="https://platform.openai.com/api-keys" target="_blank">Obtenir une clé →</a></p>
     </div>
   </div>
 
-  <!-- Application principale -->
+  <!-- APP -->
   <div id="app">
-    <h1>✍️ Agent Synopsis</h1>
-    <p class="sub">Transformation de thème — accès privé</p>
+    <div class="app-header">
+      <p class="app-title">Agent <em>Synopsis</em></p>
+      <p class="app-sub">Transformation de thème — accès privé</p>
+    </div>
 
     <div class="card">
       <label>Ton synopsis</label>
       <textarea id="synopsis" placeholder="Colle ton synopsis ici..."></textarea>
       <label>Thème cible</label>
       <input type="text" id="theme" placeholder="Ex : féerique, western, cyberpunk...">
+
       <div id="erreur" class="erreur"></div>
-      <div id="spinner" class="spinner">⏳ Traitement en cours…</div>
-      <button class="main" id="btn" onclick="lancer()">🚀 Transformer</button>
+
+      <div class="progress" id="progress">
+        <div class="progress-steps">
+          <div class="step" id="step1">📋 Analyse</div>
+          <div class="step" id="step2">✍️ Transformation</div>
+        </div>
+      </div>
+
+      <button class="btn-main" id="btn" onclick="lancer()">🚀 Transformer</button>
     </div>
 
-    <div class="resultat card" id="resultat">
+    <div id="resultat" class="card">
       <details>
-        <summary>📋 Voir l'analyse extraite</summary>
+        <summary>Voir l'analyse extraite</summary>
         <div class="analyse-box" id="analyse"></div>
       </details>
-      <p class="res-titre">Synopsis transformé</p>
+      <div class="divider"></div>
+      <p class="res-section-label">Synopsis transformé</p>
       <div class="res-texte" id="res-texte"></div>
       <button class="btn-copy" onclick="copier()">📋 Copier le résultat</button>
     </div>
@@ -91,53 +374,136 @@
 
 </div>
 <script>
-  let motDePasse = "";
+  const MOT_DE_PASSE = "monmotdepasse"; // ← change ici
+  let OPENAI_KEY = "";
+
+  const PROMPT_ANALYSE = `Tu es un analyste narratif. Lis ce synopsis et extrais :
+1. Les énigmes (liste précise)
+2. La structure narrative (début / nœud / dénouement)
+3. Les éléments immuables (personnages-clés, logique interne, style)
+Réponds UNIQUEMENT en JSON, exactement comme ceci :
+{
+  "enigmes": ["...", "..."],
+  "structure": {"debut": "...", "noeud": "...", "denouement": "..."},
+  "elements_immuables": ["...", "..."],
+  "style": "..."
+}
+Synopsis :
+{synopsis}`;
+
+  const PROMPT_TRANSFORMATION = `Tu es un auteur créatif. Réécris ce synopsis dans le thème demandé.
+RÈGLES ABSOLUES :
+- Conserve EXACTEMENT ces énigmes : {enigmes}
+- Conserve EXACTEMENT cette structure : {structure}
+- Conserve EXACTEMENT ces éléments : {elements_immuables}
+- Imite ce style d'écriture : {style}
+- Change UNIQUEMENT le thème, l'univers, l'esthétique
+Thème cible : {theme_cible}
+Synopsis original :
+{synopsis}`;
 
   function seConnecter() {
-    const v = document.getElementById("pwd").value.trim();
-    if (!v) return;
-    motDePasse = v;
+    const key = document.getElementById("api-key").value.trim();
+    const pwd = document.getElementById("pwd").value.trim();
+    const err = document.getElementById("login-err");
+
+    if (!key) { err.textContent = "Merci d'entrer ta clé OpenAI."; err.style.display = "block"; return; }
+    if (!key.startsWith("sk-")) { err.textContent = "La clé OpenAI doit commencer par sk-"; err.style.display = "block"; return; }
+    if (pwd !== MOT_DE_PASSE) { err.textContent = "Mot de passe incorrect."; err.style.display = "block"; return; }
+
+    OPENAI_KEY = key;
     document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display   = "block";
+    document.getElementById("app").style.display = "block";
+  }
+
+  async function appelerLLM(prompt) {
+    const rep = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!rep.ok) {
+      const err = await rep.json();
+      throw new Error(err.error?.message || "Erreur OpenAI");
+    }
+    const data = await rep.json();
+    return data.choices[0].message.content;
+  }
+
+  function setStep(n, state) {
+    const el = document.getElementById("step" + n);
+    el.className = "step " + state;
   }
 
   async function lancer() {
     const synopsis = document.getElementById("synopsis").value.trim();
     const theme    = document.getElementById("theme").value.trim();
     const btn      = document.getElementById("btn");
-    document.getElementById("erreur").style.display   = "none";
+    const errEl    = document.getElementById("erreur");
+
+    errEl.style.display = "none";
     document.getElementById("resultat").style.display = "none";
+
     if (!synopsis) { affErr("Merci de coller un synopsis."); return; }
     if (!theme)    { affErr("Merci d'indiquer un thème cible."); return; }
+
     btn.disabled = true;
-    document.getElementById("spinner").style.display = "block";
+    document.getElementById("progress").style.display = "block";
+    setStep(1, "active");
+    setStep(2, "");
+
     try {
-      const rep = await fetch("/api/transform", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ synopsis, theme, password: motDePasse })
-      });
-      const data = await rep.json();
-      if (!data.ok) { affErr(data.erreur); return; }
-      const a = data.analyse;
+      // ── Étape 1 : Analyse ──
+      const promptAnalyse = PROMPT_ANALYSE.replace("{synopsis}", synopsis);
+      let brut = await appelerLLM(promptAnalyse);
+
+      // Nettoyage JSON
+      const match = brut.match(/\{[\s\S]*\}/);
+      if (match) brut = match[0];
+      brut = brut.replace(/,\s*([}\]])/g, '$1');
+      const analyse = JSON.parse(brut);
+
+      setStep(1, "done");
+      setStep(2, "active");
+
+      // ── Étape 2 : Transformation ──
+      const promptTransfo = PROMPT_TRANSFORMATION
+        .replace("{synopsis}", synopsis)
+        .replace("{theme_cible}", theme)
+        .replace("{enigmes}", JSON.stringify(analyse.enigmes))
+        .replace("{structure}", JSON.stringify(analyse.structure))
+        .replace("{elements_immuables}", JSON.stringify(analyse.elements_immuables))
+        .replace("{style}", analyse.style);
+
+      const resultat = await appelerLLM(promptTransfo);
+
+      setStep(2, "done");
+
+      // ── Affichage ──
       document.getElementById("analyse").innerHTML =
-        `<b>Énigmes :</b> ${(a.enigmes||[]).join(", ")}<br><br>` +
-        `<b>Style :</b> ${a.style||""}<br><br>` +
-        `<b>Éléments immuables :</b> ${(a.elements_immuables||[]).join(", ")}`;
-      document.getElementById("res-texte").textContent   = data.resultat;
-      document.getElementById("resultat").style.display  = "block";
+        `<b>Énigmes :</b> ${(analyse.enigmes || []).join(", ")}<br><br>` +
+        `<b>Style :</b> ${analyse.style || ""}<br><br>` +
+        `<b>Éléments immuables :</b> ${(analyse.elements_immuables || []).join(", ")}`;
+      document.getElementById("res-texte").textContent = resultat;
+      document.getElementById("resultat").style.display = "block";
+
     } catch(e) {
-      affErr("Erreur réseau. Réessaie dans quelques secondes.");
+      affErr(e.message || "Erreur inattendue. Vérifie ta clé OpenAI.");
     } finally {
       btn.disabled = false;
-      document.getElementById("spinner").style.display = "none";
     }
   }
 
   function affErr(msg) {
     const el = document.getElementById("erreur");
-    el.textContent = msg; el.style.display = "block";
-    document.getElementById("spinner").style.display = "none";
+    el.textContent = msg;
+    el.style.display = "block";
     document.getElementById("btn").disabled = false;
   }
 
